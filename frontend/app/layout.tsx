@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { OrderContextProvider } from '@/context/OrdersContext'
-import { ItemsContextProvider } from '@/app/items/ItemsContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,28 +17,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <OrderContextProvider>
-          <ItemsContextProvider>
-            <div className="min-h-full w-full bg-white flex mx-auto">
-              {/* Menu Lateral */}
-              <div className="w-1/5 h-[100vh] border-r-2 border-gray-300 flex flex-col items-center justify-center gap-5">
-                <a href="/" className="font-semibold text-xl text-gray-500 hover:text-gray-800">
-                  Itens
-                </a>
-                <a href="/products" className="font-semibold text-xl text-gray-500 hover:text-gray-800">
-                  Produtos
-                </a>
-                <a href="/orders" className="font-semibold text-xl text-gray-500 hover:text-gray-800">
-                  Pedidos
-                </a>
-              </div>
-              {/* Conteúdo da Página */}
-              <div className="w-4/5 h-[100vh] flex flex-col items-center">
-                {children}
-              </div>
-            </div>
-          </ItemsContextProvider>
-        </OrderContextProvider>
+        {children}
       </body>
     </html>
   )
