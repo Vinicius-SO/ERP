@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button";
-import { Modal } from "../items/components/modal";
-import { AddItemForm } from "../items/components/AddItemForm";
+import { Form } from "./components/form";
+import { Modal } from "./components/productModal";
 
 
 const columns: ColumnDef<ItemsType>[] = [
@@ -73,6 +73,8 @@ export function ProductsTable({
     },
   });
 
+ 
+
   return (
     <div className="w-7/12">
       <div className="flex w-full mb-2 justify-between">
@@ -83,11 +85,11 @@ export function ProductsTable({
             placeholder="Search..."
             className="w-1/3 px-4 py-1 border rounded-md"
           />
-         <Modal>
-          {({ setIsOpen }) => (
-            <AddItemForm setIsOpen={setIsOpen} />
-          )}
-        </Modal>
+          <Modal>
+            {({ setIsOpen }) => (
+              <Form setIsOpen={setIsOpen} />
+            )}
+          </Modal>
       </div>
       <div className="rounded-md border">
         <Table>

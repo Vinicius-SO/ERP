@@ -3,6 +3,10 @@
 
 export function AddItem(arg1:string,arg2:string,arg3:number,arg4:string):Promise<void>;
 
+export function AddProdutoMateriaPrima(arg1:number,arg2:number,arg3:number):Promise<void>;
+
 export function GetItems():Promise<Array<{[key: string]: any}>>;
+
+export function GetMateriasPrimasPorProduto(arg1:number):Promise<Array<{[key: string]: any}>>;
 
 export function Greet(arg1:string):Promise<string>;

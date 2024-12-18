@@ -34,6 +34,39 @@ func (a *App) createItensTable() error {
 	return nil
 }
 
+// Função para criar a tabela de relacionamento Produto_MateriaPrima
+func (a *App) createProdutoMateriaPrimaTable() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS Produto_MateriaPrima (
+		id_relacionamento INTEGER PRIMARY KEY AUTOINCREMENT,
+		produto_id INTEGER NOT NULL,
+		materia_prima_id INTEGER NOT NULL,
+		quantidade INTEGER NOT NULL DEFAULT 0,
+		FOREIGN KEY (produto_id) REFERENCES Itens (id_item),
+		FOREIGN KEY (materia_prima_id) REFERENCES Itens (id_item)
+	);`
+	_, err := a.db.Exec(query)
+	if err != nil {
+		log.Printf("Erro ao criar a tabela Produto_MateriaPrima: %v", err)
+		return err
+	}
+	log.Println("Tabela Produto_MateriaPrima criada com sucesso!")
+	return nil
+}
+
+func (a *App) AddProdutoMateriaPrima(produtoID, materiaPrimaID, quantidade int) error {
+	query := `
+	INSERT INTO Produto_MateriaPrima (produto_id, materia_prima_id, quantidade)
+	VALUES (?, ?, ?);`
+	_, err := a.db.Exec(query, produtoID, materiaPrimaID, quantidade)
+	if err != nil {
+		log.Printf("Erro ao adicionar relacionamento: %v", err)
+		return err
+	}
+	log.Printf("Relacionamento entre Produto ID %d e Matéria-Prima ID %d adicionado com sucesso!", produtoID, materiaPrimaID)
+	return nil
+}
+
 func (a *App) AddItem(name, description string, quantity int, itemType string) error {
 	if quantity == 0 {
 		log.Println("Quantidade definida explicitamente como 0")
@@ -49,6 +82,46 @@ func (a *App) AddItem(name, description string, quantity int, itemType string) e
 	}
 	log.Printf("Item '%s' adicionado com sucesso! Quantidade: %d", name, quantity)
 	return nil
+}
+
+func (a *App) GetMateriasPrimasPorProduto(produtoID int) ([]map[string]interface{}, error) {
+	query := `
+	SELECT I.id_item, I.name, I.description, R.quantidade
+	FROM Produto_MateriaPrima R
+	INNER JOIN Itens I ON R.materia_prima_id = I.id_item
+	WHERE R.produto_id = ?;`
+
+	rows, err := a.db.Query(query, produtoID)
+	if err != nil {
+		log.Printf("Erro ao buscar matérias-primas do produto: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Lista para armazenar as matérias-primas
+	materiasPrimas := []map[string]interface{}{}
+
+	for rows.Next() {
+		var id int
+		var name, description string
+		var quantidade int
+
+		err := rows.Scan(&id, &name, &description, &quantidade)
+		if err != nil {
+			log.Printf("Erro ao escanear resultado: %v", err)
+			return nil, err
+		}
+
+		item := map[string]interface{}{
+			"id":          id,
+			"name":        name,
+			"description": description,
+			"quantidade":  quantidade,
+		}
+		materiasPrimas = append(materiasPrimas, item)
+	}
+
+	return materiasPrimas, nil
 }
 
 // Buscar todos os itens (não exposto no frontend)
@@ -105,6 +178,13 @@ func (a *App) startup(ctx context.Context) {
 	if err != nil {
 		log.Fatalf("Erro ao criar a tabela Itens: %v", err)
 	}
+
+	// Criar a tabela Produto_MateriaPrima
+	err = a.createProdutoMateriaPrimaTable()
+	if err != nil {
+		log.Fatalf("Erro ao criar a tabela Produto_MateriaPrima: %v", err)
+	}
+
 }
 
 // domReady is called after front-end resources have been loaded
