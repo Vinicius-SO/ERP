@@ -6,16 +6,20 @@ export function AddItem(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['AddItem'](arg1, arg2, arg3, arg4);
 }
 
-export function AddProdutoMateriaPrima(arg1, arg2, arg3) {
-  return window['go']['main']['App']['AddProdutoMateriaPrima'](arg1, arg2, arg3);
+export function AddProdutoMateriaPrimaByName(arg1, arg2, arg3) {
+  return window['go']['main']['App']['AddProdutoMateriaPrimaByName'](arg1, arg2, arg3);
+}
+
+export function GetItemIDByName(arg1) {
+  return window['go']['main']['App']['GetItemIDByName'](arg1);
 }
 
 export function GetItems() {
   return window['go']['main']['App']['GetItems']();
 }
 
-export function GetMateriasPrimasPorProduto(arg1) {
-  return window['go']['main']['App']['GetMateriasPrimasPorProduto'](arg1);
+export function GetMateriasPrimasPorProdutoByName(arg1) {
+  return window['go']['main']['App']['GetMateriasPrimasPorProdutoByName'](arg1);
 }
 
 export function Greet(arg1) {

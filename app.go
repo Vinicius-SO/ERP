@@ -15,6 +15,21 @@ type App struct {
 	db  *sql.DB
 }
 
+func (a *App) GetItemIDByName(name string) (int, error) {
+	query := `SELECT id_item FROM Items WHERE name = ?;`
+	var id int
+	err := a.db.QueryRow(query, name).Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Nenhum item encontrado com o nome: %s", name)
+			return 0, fmt.Errorf("item '%s' não encontrado", name)
+		}
+		log.Printf("Erro ao buscar o ID do item '%s': %v", name, err)
+		return 0, err
+	}
+	return id, nil
+}
+
 // Criar a tabela `Items`
 func (a *App) createItensTable() error {
 	query := `
@@ -54,16 +69,29 @@ func (a *App) createProdutoMateriaPrimaTable() error {
 	return nil
 }
 
-func (a *App) AddProdutoMateriaPrima(produtoID, materiaPrimaID, quantidade int) error {
+func (a *App) AddProdutoMateriaPrimaByName(produtoName, materiaPrimaName string, quantidade int) error {
+	// Buscar os IDs dos nomes fornecidos
+	produtoID, err := a.GetItemIDByName(produtoName)
+	if err != nil {
+		return fmt.Errorf("Erro ao buscar o produto '%s': %v", produtoName, err)
+	}
+
+	materiaPrimaID, err := a.GetItemIDByName(materiaPrimaName)
+	if err != nil {
+		return fmt.Errorf("Erro ao buscar a matéria-prima '%s': %v", materiaPrimaName, err)
+	}
+
+	// Inserir no banco de dados
 	query := `
 	INSERT INTO Produto_MateriaPrima (produto_id, materia_prima_id, quantidade)
 	VALUES (?, ?, ?);`
-	_, err := a.db.Exec(query, produtoID, materiaPrimaID, quantidade)
+	_, err = a.db.Exec(query, produtoID, materiaPrimaID, quantidade)
 	if err != nil {
 		log.Printf("Erro ao adicionar relacionamento: %v", err)
 		return err
 	}
-	log.Printf("Relacionamento entre Produto ID %d e Matéria-Prima ID %d adicionado com sucesso!", produtoID, materiaPrimaID)
+
+	log.Printf("Relacionamento entre Produto '%s' e Matéria-Prima '%s' adicionado com sucesso!", produtoName, materiaPrimaName)
 	return nil
 }
 
@@ -84,7 +112,14 @@ func (a *App) AddItem(name, description string, quantity int, itemType string) e
 	return nil
 }
 
-func (a *App) GetMateriasPrimasPorProduto(produtoID int) ([]map[string]interface{}, error) {
+func (a *App) GetMateriasPrimasPorProdutoByName(produtoName string) ([]map[string]interface{}, error) {
+	// Buscar o ID do produto pelo nome
+	produtoID, err := a.GetItemIDByName(produtoName)
+	if err != nil {
+		return nil, fmt.Errorf("Erro ao buscar o produto '%s': %v", produtoName, err)
+	}
+
+	// Buscar as matérias-primas relacionadas ao produto
 	query := `
 	SELECT I.id_item, I.name, I.description, R.quantidade
 	FROM Produto_MateriaPrima R

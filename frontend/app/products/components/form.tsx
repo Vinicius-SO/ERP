@@ -1,13 +1,27 @@
 import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { InputSelect } from './inputPreseted'; // Componente InputSelect
 import { useItemsContext } from '@/app/items/ItemsContext';
+import { AddProdutoMateriaPrimaByName } from '@/wailsjs/wailsjs/go/main/App';
 
 interface FormProps {
-  setIsOpen: (state:boolean)=> void
+  setIsOpen: (state: boolean) => void;
 }
 
+// Esquema de validação com Zod
+const formSchema = z.object({
+  Product: z.string().nonempty('O campo Produto é obrigatório'), // Campo obrigatório
+  items: z.string().nonempty('O campo Item é obrigatório'),     // Campo obrigatório
+  quantity: z
+    .number({ invalid_type_error: 'A quantidade deve ser um número' })
+    .min(0, 'A quantidade deve ser maior ou igual a 0'),          // Valor mínimo
+});
 
-export const Form = ({setIsOpen}:FormProps) => {
+// Tipos derivados do esquema Zod
+type FormValues = z.infer<typeof formSchema>;
+
+export const Form = ({ setIsOpen }: FormProps) => {
   const { items } = useItemsContext();
 
   const itensNames: string[] = [];
@@ -24,60 +38,67 @@ export const Form = ({setIsOpen}:FormProps) => {
     itensNames.push(item.name);
   });
 
-  // React Hook Form
-  const { handleSubmit, control, register } = useForm();
+  // React Hook Form com Zod Resolver
+  const { handleSubmit, control, register, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+  });
 
   // Lógica de envio
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormValues) => {
     console.log('Valores enviados:', data);
-    setIsOpen(false)
+    setIsOpen(false);
+    AddProdutoMateriaPrimaByName(data.Product, data.items, data.quantity)
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 m-auto">
       <div>
         {/* Campo 1: Seleção de Produtos */}
-        <div>
-          <label htmlFor="campo1" className="block mb-1 text-sm font-medium">
+        <div className='my-5'>
+          <label htmlFor="Product" className="block mb-1 text-sm font-medium">
             Produto
           </label>
           <Controller
-            name="campo1"
+            name="Product"
             control={control}
             defaultValue=""
             render={({ field: { onChange, onBlur, value } }) => (
               <InputSelect
                 options={productsNames}
-                placeholder='Digite o nome do produto ...'
+                placeholder="Digite o nome do produto ..."
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
               />
             )}
           />
+          {errors.Product && <p className="text-red-500 text-sm">{errors.Product.message}</p>}
         </div>
+
         {/* Campo 2: Seleção de Itens */}
-        <div>
-          <label htmlFor="campo2" className="block mb-1 text-sm font-medium">
+        <div className='mb-5'>
+          <label htmlFor="items" className="block mb-1 text-sm font-medium">
             Item
           </label>
           <Controller
-            name="campo2"
+            name="items"
             control={control}
             defaultValue=""
             render={({ field: { onChange, onBlur, value } }) => (
               <InputSelect
                 options={itensNames}
-                placeholder='Digite o nome do item ...'
+                placeholder="Digite o nome do item ..."
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
               />
             )}
           />
+          {errors.items && <p className="text-red-500 text-sm">{errors.items.message}</p>}
         </div>
+
         {/* Campo 3: Quantidade (Input Numérico) */}
-        <div>
+        <div className='mb-5'>
           <label htmlFor="quantity" className="block mb-1 text-sm font-medium">
             Quantidade
           </label>
@@ -89,11 +110,12 @@ export const Form = ({setIsOpen}:FormProps) => {
             className="w-10/12 p-2 border rounded"
             placeholder="Digite a quantidade"
           />
+          {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
         </div>
       </div>
 
       {/* Botão de envio */}
-      <div className='w-full flex justify-end mr-8 mt-7'>
+      <div className="w-full flex justify-center mr-8 mt-7">
         <button
           type="submit"
           className="px-4 py-2 text-white bg-gray-900 rounded hover:bg-gray-700"
